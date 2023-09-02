@@ -2,6 +2,9 @@
 ;; Based on System Crafters
 ;; ![Emacs from Scratch](https://www.youtube.com/live/74zOY-vgkyw?si=_2SNVezXLoDQ4WZC)
 
+;; You will most likely need to adjust this font size for your system!
+(defvar runemacs/default-font-size 180)
+
 (setq inhibit-startup-message t)
 
 (scroll-bar-mode -1)        ; Disable visible scrollbar
@@ -14,14 +17,12 @@
 ;; Set up the visible bell
 (setq visible-bell t)
 
-(set-face-attribute 'default nil :font "Fira Code Retina" :height 280)
-
-(load-theme 'tango-dark)
+(set-face-attribute 'default nil :font "Fira Code Retina" :height runemacs/default-font-size)
 
 ;; Make ESC quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
-;; Initilize package sources
+;; Initialize package sources
 (require 'package)
 
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
@@ -39,13 +40,23 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+(column-number-mode)
+(global-display-line-numbers-mode t)
+
+;; Disable line numbers for some modes
+(dolist (mode '(org-mode-hook
+                term-mode-hook
+                shell-mode-hook
+                eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
 (use-package command-log-mode)
-(global-command-log-mode)
+
 (use-package ivy
   :diminish
   :bind (("C-s" . swiper)
          :map ivy-minibuffer-map
-         ("TAB" . ivy-alt-done)	
+         ("TAB" . ivy-alt-done)
          ("C-l" . ivy-alt-done)
          ("C-j" . ivy-next-line)
          ("C-k" . ivy-previous-line)
@@ -59,34 +70,59 @@
   :config
   (ivy-mode 1))
 
-(use-package counsel
-  :bind (("M-x" . counsel-M-x)
-	 ("C-x b" . counsel-ibuffer)
-	 ("C-x C-f" . counsel-find-file)
-	 ;;:map mini-buffer-local-map ;; doesn't work in this version of init.el
-	 ("C-r" . "counsel-minibuffer-history"))
-  :config
-  (setq ivy-initial-inputs-alist nil)) ;; Don't start searches with ^
-	 
+;; NOTE: The first time you load your configuration on a new machine, you'll
+;; need to run the following command interactively so that mode line icons
+;; display correctly:
+;;
+;; M-x all-the-icons-install-fonts
+
+(use-package all-the-icons)
+
 (use-package doom-modeline
-  :ensure t
   :init (doom-modeline-mode 1)
   :custom ((doom-modeline-height 15)))
 
+(use-package doom-themes
+  :init (load-theme 'doom-dracula t))
 
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
 
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 1))
 
+(use-package ivy-rich
+  :init
+  (ivy-rich-mode 1))
 
+(use-package counsel
+  :bind (("M-x" . counsel-M-x)
+         ("C-x b" . counsel-ibuffer)
+         ("C-x C-f" . counsel-find-file)
+         :map minibuffer-local-map
+         ("C-r" . 'counsel-minibuffer-history)))
 
-
-
+(use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key] . helpful-key))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(doom-modeline counsel ivy command-log-mode)))
+ '(org-agenda-files '("~/Dropbox/org/"))
+ '(package-selected-packages
+   '(helpful ivy-rich org which-key rainbow-delimiters doom-modeline counsel ivy command-log-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

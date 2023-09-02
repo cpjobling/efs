@@ -1,3 +1,4 @@
-melpa
-elpa
+*
 
+!.init.el
+!.gitignore
