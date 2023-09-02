@@ -7,12 +7,12 @@
 
 (setq inhibit-startup-message t)
 
-(scroll-bar-mode -1)        ; Disable visible scrollbar
-(tool-bar-mode -1)          ; Disable the toolbar
-(tooltip-mode -1)           ; Disable tooltips
+(scroll-bar-mode t)        ; Disable visible scrollbar
+(tool-bar-mode t)          ; Disable the toolbar
+(tooltip-mode t)           ; Disable tooltips
 (set-fringe-mode 10)        ; Give some breathing room
 
-(menu-bar-mode -1)            ; Disable the menu bar
+(menu-bar-mode t)            ; Disable the menu bar
 
 ;; Set up the visible bell
 (setq visible-bell t)
@@ -83,7 +83,7 @@
   :custom ((doom-modeline-height 15)))
 
 (use-package doom-themes
-  :init (load-theme 'doom-dracula t))
+  :init (load-theme 'doom-solarized-dark-high-contrast t))
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -115,17 +115,57 @@
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(org-agenda-files '("~/Dropbox/org/"))
- '(package-selected-packages
-   '(helpful ivy-rich org which-key rainbow-delimiters doom-modeline counsel ivy command-log-mode)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+(use-package general
+  :config
+  (general-create-definer rune/leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
+
+  (rune/leader-keys
+    "t"  '(:ignore t :which-key "toggles")
+    "tt" '(counsel-load-theme :which-key "choose theme")))
+
+(use-package evil
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  (setq evil-want-C-u-scroll t)
+  (setq evil-want-C-i-jump nil)
+  :config
+  (evil-mode 1)
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+
+  ;; Use visual line motions even outside of visual-line-mode buffers
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+  (evil-set-initial-state 'messages-buffer-mode 'normal)
+  (evil-set-initial-state 'dashboard-mode 'normal))
+
+(use-package evil-collection
+  :after evil
+  :config
+  (evil-collection-init))
+
+(use-package hydra)
+
+(defhydra hydra-text-scale (:timeout 4)
+  "scale text"
+  ("j" text-scale-increase "in")
+  ("k" text-scale-decrease "out")
+  ("f" nil "finished" :exit t))
+
+(rune/leader-keys
+  "ts" '(hydra-text-scale/body :which-key "scale text"))
+
+;; Save customizations
+;; See: https://www.gnu.org/software/emacs/manual/html_node/emacs/Saving-Customizations.html#:~:text=You%20can%20choose%20to%20save%20customizations%20somewhere%20other,file.%20For%20example%3A%20%28setq%20custom-file%20%22~%2F.config%2Femacs-custom.el%22%29%20%28load%20custom-file%29
+
+(setq custom-file "~/emacsen/efs/custom.el")
+(load custom-file)
+;(add-hook 'kill-emacs-query-functions
+;          'custom-prompt-customize-unsaved-options)
+
+
